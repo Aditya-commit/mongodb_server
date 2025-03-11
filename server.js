@@ -216,6 +216,44 @@ app.get('/show_cols/:db' , (req , res) => {
 
 
 
+app.get('/fetch_data/:db/:col' , (req , res) => {
+
+	const db = req.params?.db
+	const coll = req.params?.col;
+
+	if(db === undefined){
+
+		res.set('Content-Type' , 'text/plain')
+		res.status(400).end('Please select a database');
+	}
+	else if(coll === undefined){
+
+		res.set('Content-Type' , 'text/plain')
+		res.status(400).end('Please provide collection');
+	}
+	else{
+
+		const dbInstance = req.conn.db(db);
+
+		const col = dbInstance.collection(coll);
+	
+
+		col.find().toArray()
+		.then(response => {
+
+			res.json(response);
+		})
+		.catch(error => {
+
+			console.log(error);
+
+			res.status(500).end('Internal Server Error');
+		});
+	}
+})
+
+
+
 app.listen(process.env.PORT , process.env.HOST , () => {
 	console.log(`Server is listening at port ${process.env.PORT}`);
 });
