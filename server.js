@@ -254,6 +254,138 @@ app.get('/fetch_data/:db/:col' , (req , res) => {
 
 
 
+
+app.post('/create_db' , (req , res) => {
+
+	const form = new formidable.IncomingForm();
+
+	form.parse(req , (error , fields ,files) => {
+
+		if(error){
+
+			res.set('Content-Type' , 'text/plain');
+			res.status(500).end('Cannot parse data');
+		}
+
+		else{
+
+			const { database , collection } = fields;
+
+
+			req.conn.db(database[0]).createCollection(collection[0])
+			.then(response => {
+
+				res.set('Content-Type' , 'text/plain');
+				res.status(200).end('Database Created');
+
+			})
+			.catch(error => {
+				console.log(error);
+
+				res.set('Content-Type' , 'text/plain');
+				res.status(500).end('Could not create database');
+			});
+		}
+	})
+});
+
+
+
+
+app.post('/create_coll' , (req ,res) => {
+
+	const form = new formidable.IncomingForm();
+
+	form.parse(req , (error , fields , files) => {
+
+		if(error){
+
+			res.set('Content-Type' , 'text/plain');
+			res.status(500).end('Could not parse data');
+		}
+		else{
+
+			const { database , collection } = fields;
+
+			req.conn.db(database[0]).createCollection(collection[0])
+			.then(response => {
+
+				res.set('Content-Type' , 'text/plain');
+				res.status(200).end('Collection Created');
+
+			})
+			.catch(error => {
+				console.log(error);
+
+				res.set('Content-Type' , 'text/plain');
+				res.status(500).end('Could not create collection');
+			});
+		}
+	})
+});
+
+
+app.delete('/drop_db/:db' , (req , res) => {
+
+	const db = req.params?.db;
+
+	if(db === undefined){
+
+		res.set('Content-Type' , 'text/plain');
+		res.status(400).end('Please provide the database');
+	}
+	else{
+
+		req.conn.db(db).dropDatabase()
+		.then(response => {
+
+			res.set('Content-Type' , 'text/plain');
+			res.status(200).end('Database deleted Successfully');
+		})
+		.catch(error => {
+
+			console.log(error);
+			res.set('Content-Type' , 'text/plain');
+			res.status(500).end(`Could not delete database ${db}`);
+		});
+	}
+});
+
+
+app.delete('/drop_col/:db/:col' , (req , res) => {
+
+	const db = req.params?.db;
+	const col = req.params?.col;
+
+
+	if(db === undefined){
+
+		res.set('Content-Type' , 'text/plain');
+		res.status(400).end('Please provide the database');
+	}
+	else if(col === undefined){
+
+		res.set('Content-Type' , 'text/plain');
+		res.status(400).end('Please provide the collection');
+	}
+	else{
+
+		req.conn.db(db).collection(col).drop()
+		.then(response => {
+
+			res.set('Content-Type' , 'text/plain');
+			res.status(200).end('Collection deleted Successfully');
+		})
+		.catch(error => {
+
+			console.log(error);
+			res.set('Content-Type' , 'text/plain');
+			res.status(500).end(`Could not delete collection ${col}`);
+		});
+	}
+});
+
+
 app.listen(process.env.PORT , process.env.HOST , () => {
 	console.log(`Server is listening at port ${process.env.PORT}`);
 });
