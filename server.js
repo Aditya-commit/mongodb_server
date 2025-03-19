@@ -19,7 +19,7 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 app.use(cookieParser(process.env.SECRET));
-
+app.use(express.json())
 
 
 
@@ -384,6 +384,68 @@ app.delete('/drop_col/:db/:col' , (req , res) => {
 		});
 	}
 });
+
+
+app.post('/insert_doc' , (req ,res) => {
+
+
+	const { db : database , col : collection , data } = req.body;
+
+
+	if(database === undefined){
+
+		res.set('Content-Type' , 'text/plain');
+		res.status(500).end('Please select a database');
+	}
+	else if(collection === undefined){
+
+		res.set('Content-Type' , 'text/plain');
+		res.status(500).end('Please select collection');
+	}
+	else if(data === undefined){
+
+		res.set('Content-Type' ,'text/plain');
+		res.status(400).end('Data not present');
+	}
+	else if(!Array.isArray(data)){
+
+		res.set('Content-Type' ,'text/plain');
+		res.status(400).end('Data is not of valid format');
+	}
+	else if(data.length === 0){
+
+		res.set('Content-Type' , 'text/plain');
+		res.status(400).end('Please provide the data');
+	}
+	else{
+
+		req.conn.db(database).collection(collection).insertMany(data)
+		.then(response => {
+			
+			if(response.acknowledged){
+
+				if(response.insertedCount === data.length){
+
+					let responseIds = [];
+
+					Object.keys(response.insertedIds).map(key => responseIds.push(response.insertedIds[key]));
+
+
+					res.set('Content-Type' , 'application/json');
+					res.end(JSON.stringify(responseIds));
+				}
+			}
+
+		})
+		.catch(error => {
+			console.log(error)
+
+			res.set('Content-Type' , 'text/plain');
+			res.status(500).end('Internal Server Error');
+		});
+	}
+});
+
 
 
 app.listen(process.env.PORT , process.env.HOST , () => {
