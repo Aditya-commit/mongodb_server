@@ -4,6 +4,7 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const formidable = require('formidable')
 const { MongoClient } = require('mongodb');
+const bson = require('bson');
 const { v4 : uuidv4 } = require('uuid');
 
 const app = express();
@@ -445,6 +446,67 @@ app.post('/insert_doc' , (req ,res) => {
 		});
 	}
 });
+
+
+
+app.delete('/delete_doc/:db/:col/:id' , (req ,res) => {
+
+	const db = req.params?.db;
+	const col = req.params?.col;
+	const id = req.params?.id;
+
+
+
+	if(db === undefined){
+
+		res.set('Content-Type' , 'text/plain');
+		res.status(400).end('Please select a database');
+	}
+	else if(col === undefined){
+
+		res.set('Content-Type' , 'text/plain');
+		res.status(400).end('Please select a collection');
+	}
+	else if(id === undefined){
+
+		res.set('Content-Type' , 'text/plain');
+		res.status(400).end('Please select a document');
+	}
+	else{
+
+
+		req.conn.db(db).collection(col).deleteOne({'_id' : new bson.ObjectId(id)})
+		.then(response => {
+
+			
+			if(response.acknowledged){
+
+				if(response.deletedCount === 1){
+
+					res.set('Content-Type' , 'text/plain');
+					res.status(200).end('Deleted Successfully');
+				}
+				else{
+
+					res.set('Content-Type' , 'text/plain');
+					res.status(500).end('Could not delete document');
+				}
+			}
+			else{
+
+				res.set('Content-Type' , 'text/plain');
+				res.status(500).end('Could not delete document');
+			}
+
+		})
+		.catch(error => {
+
+			console.log(error);
+
+			res.status(500).end('Could not delete document');
+		});
+	}
+})
 
 
 
