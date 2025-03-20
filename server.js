@@ -509,6 +509,63 @@ app.delete('/delete_doc/:db/:col/:id' , (req ,res) => {
 })
 
 
+app.delete('/delete_field/:db/:col/:id/:key' , (req ,res) => {
+
+	const db = req.params?.db;
+	const col = req.params?.col;
+	const id = req.params?.id;
+	const key = req.params?.key;
+
+
+
+	if(db === undefined){
+
+		res.set('Content-Type' , 'text/plain');
+		res.status(400).end('Please select a database');
+	}
+	else if(col === undefined){
+
+		res.set('Content-Type' , 'text/plain');
+		res.status(400).end('Please select a collection');
+	}
+	else if(id === undefined){
+
+		res.set('Content-Type' , 'text/plain');
+		res.status(400).end('Please select a document');
+	}
+	else if(key === undefined){
+
+		res.set('Content-Type' , 'text/plain');
+		res.status(400).end('Please select a field');
+	}
+	else{
+
+
+		req.conn.db(db).collection(col).updateOne({'_id' : new bson.ObjectId(id)} , {$unset : {[key] : ''}})
+		.then(response => {
+
+			if(response.acknowledged){
+
+				res.set('Content-Type' , 'text/plain');
+				res.status(200).end('Deleted Successfully');
+			}
+			else{
+
+				res.set('Content-Type' , 'text/plain');
+				res.status(500).end('Could not delete field');
+			}
+
+		})
+		.catch(error => {
+
+			console.log(error);
+
+			res.status(500).end('Could not delete field');
+		});
+	}
+})
+
+
 
 app.listen(process.env.PORT , process.env.HOST , () => {
 	console.log(`Server is listening at port ${process.env.PORT}`);
