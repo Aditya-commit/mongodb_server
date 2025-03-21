@@ -567,6 +567,71 @@ app.delete('/delete_field/:db/:col/:id/:key' , (req ,res) => {
 
 
 
+
+app.post('/update_doc' , (req ,res) => {
+
+
+
+	const { database , collection , updatedDoc } = req.body;
+
+
+	if(database === undefined){
+
+		res.set('Content-Type' , 'text/plain');
+		res.status(500).end('Please select a database');
+	}
+	else if(collection === undefined){
+
+		res.set('Content-Type' , 'text/plain');
+		res.status(500).end('Please select collection');
+	}
+	else if(updatedDoc === undefined){
+
+		res.set('Content-Type' ,'text/plain');
+		res.status(400).end('Data not present');
+	}
+	else if(typeof(updatedDoc) !== 'object'){
+
+		res.set('Content-Type' ,'text/plain');
+		res.status(400).end('Data is not of valid format');
+	}
+	else{
+
+
+		const selectionQuery = { '_id' : new bson.ObjectId(updatedDoc['_id'])};
+
+		delete updatedDoc['_id'];
+
+
+		req.conn.db(database).collection(collection).replaceOne(selectionQuery , updatedDoc)
+		.then(response => {
+
+
+			if(response.acknowledged){
+
+				res.set('Content-Type' , 'text/plain');
+				res.status(200).end('Document Updated Successfully');
+			}
+			else{
+
+				res.set('Content-Type' , 'text/plain');
+				res.status(500).end('Failed to update document');
+			}
+		})
+		.catch(error => {
+
+			console.log(error);
+
+			res.set('Content-Type' , 'text/plain');
+			res.status(500).end('Internal Server Error');
+		});
+
+	}
+
+});
+
+
+
 app.listen(process.env.PORT , process.env.HOST , () => {
 	console.log(`Server is listening at port ${process.env.PORT}`);
 });
