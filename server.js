@@ -396,12 +396,12 @@ app.post('/insert_doc' , (req ,res) => {
 	if(database === undefined){
 
 		res.set('Content-Type' , 'text/plain');
-		res.status(500).end('Please select a database');
+		res.status(400).end('Please select a database');
 	}
 	else if(collection === undefined){
 
 		res.set('Content-Type' , 'text/plain');
-		res.status(500).end('Please select collection');
+		res.status(400).end('Please select collection');
 	}
 	else if(data === undefined){
 
@@ -578,12 +578,12 @@ app.post('/update_doc' , (req ,res) => {
 	if(database === undefined){
 
 		res.set('Content-Type' , 'text/plain');
-		res.status(500).end('Please select a database');
+		res.status(400).end('Please select a database');
 	}
 	else if(collection === undefined){
 
 		res.set('Content-Type' , 'text/plain');
-		res.status(500).end('Please select collection');
+		res.status(400).end('Please select collection');
 	}
 	else if(updatedDoc === undefined){
 
@@ -628,6 +628,74 @@ app.post('/update_doc' , (req ,res) => {
 
 	}
 
+});
+
+
+
+
+app.post('/filter_docs' , (req , res) => {
+
+
+	const form = new formidable.IncomingForm()
+
+	form.parse(req , (error , fields ,files) => {
+		
+		if(error){
+
+			res.set('Content-Type' , 'text/plain');
+			res.status(500).end('Cannot parse provided data');
+		}
+
+		const { database , collection , query } = fields;
+
+
+		if(database === undefined){
+
+			res.set('Content-Type' , 'text/plain');
+			res.status(400).end('Please select database');
+		}
+		else if(collection === undefined){
+
+			res.set('Content-Type' , 'text/plain');
+			res.status(400).end('Please select collection');
+		}
+		else if(query === undefined){
+
+			res.set('Content-Type' , 'text/plain');
+			res.status(400).end('Please provide query');
+		}
+		else{
+
+			try{
+
+				const findQuery = JSON.parse(query[0]);
+
+
+				req.conn.db(database[0]).collection(collection[0]).find(findQuery).toArray()
+				.then(response => {
+
+					res.set('Content-Type' , 'application/json');
+
+					res.status(200).end(JSON.stringify(response));
+				})
+				.catch(error => {
+
+					console.log(error);
+
+					res.set('Content-Type' ,'text/plain');
+					res.status(500).end('Cannot query documents');
+				})
+			}
+			catch(error){
+
+				console.log(error);
+
+				res.set('Content-Type' , 'text/plain');
+
+				res.status(500).end('Provided query is not of valid format');
+			}
+		}
+	});
 });
 
 
